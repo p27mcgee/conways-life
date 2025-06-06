@@ -1,0 +1,36 @@
+# macOS specific files
+.DS_Store
+
+# Gradle files
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Java specific files
+*.class
+*.jar
+*.war
+*.ear
+
+# Logs
+*.log
+
+# IntelliJ IDEA files
+.idea/
+*.iml
+out/
+
+# VS Code files
+.vscode/
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+
+# Test reports
+test-results/
+*.xml
+
+# JavaFX cache
+javafx-sdk-*/lib/

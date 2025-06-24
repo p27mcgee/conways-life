@@ -1,53 +1,95 @@
 package com.example.conwayslife;
 
-import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import javafx.stage.Stage;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 
-public class Main extends Application {
+public class Main {
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Conway's Game of Life");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(800, 600);
+        frame.setLocationRelativeTo(null);
 
-    @Override
-    public void start(Stage primaryStage) {
-        // Main screen area
-        Pane mainScreen = new Pane();
-        mainScreen.setStyle("-fx-background-color: lightgray; -fx-border-color: black;");
-        mainScreen.setPrefSize(800, 600);
+        GameOfLifePanel panel = new GameOfLifePanel(50, 50);
+        frame.add(panel);
 
-        // Control panel
-        HBox controlPanel = new HBox(10);
-        controlPanel.setStyle("-fx-padding: 10; -fx-background-color: #f0f0f0; -fx-border-color: black;");
-        Button backButton = new Button("Back");
-        Button forwardButton = new Button("Forward");
-        controlPanel.getChildren().addAll(backButton, forwardButton);
+        frame.setVisible(true);
+    }
+}
 
-        // Hamburger menu
-        MenuBar menuBar = new MenuBar();
-        Menu menu = new Menu("Menu");
-        MenuItem helpItem = new MenuItem("Help");
-        MenuItem aboutItem = new MenuItem("About");
-        MenuItem exitItem = new MenuItem("Exit");
-        menu.getItems().addAll(helpItem, aboutItem, exitItem);
-        menuBar.getMenus().add(menu);
+class GameOfLifePanel extends JPanel implements ActionListener {
+    private final int rows, cols;
+    private boolean[][] grid;
+    private Timer timer;
 
-        // Exit functionality
-        exitItem.setOnAction(event -> primaryStage.close());
+    public GameOfLifePanel(int rows, int cols) {
+        this.rows = rows;
+        this.cols = cols;
+        this.grid = new boolean[rows][cols];
+        this.timer = new Timer(300, this);
 
-        // Layout
-        BorderPane layout = new BorderPane();
-        layout.setTop(menuBar);
-        layout.setCenter(mainScreen);
-        layout.setBottom(controlPanel);
+        // Random initial state
+        for (int r = 0; r < rows; r++)
+            for (int c = 0; c < cols; c++)
+                grid[r][c] = Math.random() < 0.2;
 
-        // Scene and Stage
-        Scene scene = new Scene(layout, 800, 650);
-        primaryStage.setTitle("Conway's Life");
-        primaryStage.setScene(scene);
-        primaryStage.show();
+        this.setPreferredSize(new Dimension(600, 600));
+        this.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                int cellWidth = getWidth() / cols;
+                int cellHeight = getHeight() / rows;
+                int col = e.getX() / cellWidth;
+                int row = e.getY() / cellHeight;
+                if (row >= 0 && row < rows && col >= 0 && col < cols) {
+                    grid[row][col] = !grid[row][col];
+                    repaint();
+                }
+            }
+        });
+
+        timer.start();
     }
 
-    public static void main(String[] args) {
-        launch(args);
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        int cellWidth = getWidth() / cols;
+        int cellHeight = getHeight() / rows;
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                if (grid[r][c]) {
+                    g.setColor(Color.BLACK);
+                    g.fillRect(c * cellWidth, r * cellHeight, cellWidth, cellHeight);
+                }
+                g.setColor(Color.LIGHT_GRAY);
+                g.drawRect(c * cellWidth, r * cellHeight, cellWidth, cellHeight);
+            }
+        }
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        boolean[][] next = new boolean[rows][cols];
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                int neighbors = countNeighbors(r, c);
+                next[r][c] = grid[r][c] ? (neighbors == 2 || neighbors == 3) : (neighbors == 3);
+            }
+        }
+        grid = next;
+        repaint();
+    }
+
+    private int countNeighbors(int row, int col) {
+        int count = 0;
+        for (int dr = -1; dr <= 1; dr++) {
+            for (int dc = -1; dc <= 1; dc++) {
+                if (dr == 0 && dc == 0) continue;
+                int r = row + dr, c = col + dc;
+                if (r >= 0 && r < rows && c >= 0 && c < cols && grid[r][c]) count++;
+            }
+        }
+        return count;
     }
 }
